@@ -1526,9 +1526,21 @@ def toCAOSByteArray(b):
 
 
 
-
-
 def transientLC2EDefaultMain(args):
+	"This functions as a useable function for simple applications, and also an example for others! :D"
+	
+	def b(session):
+		session.waitForEngineToTerminate();
+	#
+	
+	transientLC2EDefaultCoreMain(args, b)
+#
+
+
+
+def transientLC2EDefaultCoreMain(args, body):
+	"This functions as a useable function for simple applications, and also an example for others! :D"
+	
 	Default = object();
 	
 	
@@ -1582,7 +1594,8 @@ def transientLC2EDefaultMain(args):
 	print("CAOS Test! :D     Square of 9: "+session.runcaos("setv va00 9  mulv va00 va00  outv va00"));
 	
 	
-	session.waitForEngineToTerminate();
+	body(session)
+	
 	
 	session.cleanUp();
 	
@@ -1699,6 +1712,6 @@ def isall(predicate, iterable):
 
 
 
-# Necessary hook-thing in python codes to make it both an importable library module, *and* an executable program in its own right! :D    (like C and Java come with by default :P   which has good things and bad things :> )
+# Necessary hook-thing in python codes to make it both an importable library module, *and* an executable program in its own right! :D    (like C and Java come with by default :P   which has pros and cons :> )
 if (__name__ == "__main__"):
 	sys.exit(transientLC2EDefaultMain(sys.argv[1:]));
