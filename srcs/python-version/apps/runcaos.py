@@ -104,7 +104,7 @@ def startLC2ERunCaosAndTerminate(caoscodes, config, rwdir, rodir=None, verbose=F
 	# Apparently we have to set the default music even though we're running on a skeleton pack XD'
 	configureTransientLC2ESessionForStandardDockingStation(session);
 	
-	session.start();
+	session.start("RunCAOS", True);
 	
 	session.waitForEngineToBecomeCaosable();
 	

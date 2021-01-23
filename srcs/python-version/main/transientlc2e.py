@@ -4,6 +4,8 @@ import sys, threading, weakref, atexit, random;
 import time, errno, os, subprocess, socket;
 import json;
 
+from random import Random
+
 Default = object();
 
 UserDir = os.path.join(os.getenv("HOME"), ".tlc2e")
@@ -306,6 +308,34 @@ class TransientLC2ESession(object):
 	#
 	
 	
+	def extractCreaturesFilesystemFromMachineConfigAsThePrimaryReadwriteFilesystem(self):
+		return self.extractCreaturesFilesystemFromMachineConfig(None)
+	def extractCreaturesFilesystemFromMachineConfigAsTheAuxiliaryReadonlyFilesystem(self):
+		return self.extractCreaturesFilesystemFromMachineConfig(1)
+	
+	def extractCreaturesFilesystemFromMachineConfig(self, auxnum):
+		a = "Auxiliary "+repr(auxnum)+" " if auxnum != None else "";
+		
+		creaturesFilesystem = CreaturesFilesystem()
+		creaturesFilesystem.Main_Directory = self.machineConfig[a+"Main Directory"]
+		creaturesFilesystem.Backgrounds_Directory = self.machineConfig[a+"Backgrounds Directory"]
+		creaturesFilesystem.Body_Data_Directory = self.machineConfig[a+"Body Data Directory"]
+		creaturesFilesystem.Bootstrap_Directory = self.machineConfig[a+"Bootstrap Directory"]
+		creaturesFilesystem.Catalogue_Directory = self.machineConfig[a+"Catalogue Directory"]
+		creaturesFilesystem.Creature_Database_Directory = self.machineConfig[a+"Creature Database Directory"]
+		creaturesFilesystem.Exported_Creatures_Directory = self.machineConfig[a+"Exported Creatures Directory"]
+		creaturesFilesystem.Genetics_Directory = self.machineConfig[a+"Genetics Directory"]
+		creaturesFilesystem.Images_Directory = self.machineConfig[a+"Images Directory"]
+		creaturesFilesystem.Journal_Directory = self.machineConfig[a+"Journal Directory"]
+		creaturesFilesystem.Overlay_Data_Directory = self.machineConfig[a+"Overlay Data Directory"]
+		creaturesFilesystem.Resource_Files_Directory = self.machineConfig[a+"Resource Files Directory"]
+		creaturesFilesystem.Sounds_Directory = self.machineConfig[a+"Sounds Directory"]
+		creaturesFilesystem.Users_Directory = self.machineConfig[a+"Users Directory"]
+		creaturesFilesystem.Worlds_Directory = self.machineConfig[a+"Worlds Directory"]
+		return creaturesFilesystem
+	#
+	
+	
 	
 	
 	def readInitialSkeletonConfigFileDataFromEngineTemplate(self):
@@ -422,10 +452,13 @@ class TransientLC2ESession(object):
 		return TransientLC2ESessionStateException("It's in the wrong state! ;_;   (it is currently "+TransientLC2ESession.fmtstate(self.state)+" ;; )");
 	
 	
-	def start(self):
+	def start(self, creator, hidden, name=None, description=None, icon=None):
 		"""
 		Start the lc2e engine!! :D!
 		+ If this *doesn't* throw/raise an error, then it will be properly in the Running state ^^'
+		
+		creator, name description, icon are from the publishing protocol :3
+		so creator is None for a user-made world, or the name of the tool for an automatic world (eg, TryAgent or RunCAOS)
 		"""
 		
 		if (self.state != TransientLC2ESession.State_Unstarted):
@@ -454,11 +487,71 @@ class TransientLC2ESession(object):
 		
 		
 		
+		
+		# Publishing protocol! :D
+		d = os.path.join(UserDir, "running")
+		if (not os.path.isdir(UserDir)):
+			os.mkdir(UserDir)
+		if (not os.path.isdir(d)):
+			os.mkdir(d)
+		
+		
+		
+		while True:
+			publishingProtocolFile = os.path.join(d, str(Random().randint(0, 2147483647)))
+			
+			if (not os.path.lexists(publishingProtocolFile)):
+				writeallText(publishingProtocolFile, "", overwrite=False)  #quickly as we race to the race condition as unix requires x'D
+				
+				extraInfo = {
+					"creator": creator
+				}
+				
+				if (name != None):
+					extraInfo["name"] = name
+				
+				if (description != None):
+					extraInfo["description"] = description
+				
+				if (icon != None):
+					extraInfo["icon"] = icon
+				
+				
+				rwcfs = self.extractCreaturesFilesystemFromMachineConfigAsThePrimaryReadwriteFilesystem()
+				
+				wd = rwcfs.Worlds_Directory
+				if (wd != None and os.path.isdir(wd)):
+					extraInfo["worldnames"] = os.listdir(wd)
+				
+				
+				
+				c = {
+					"e6b02a88-7311-4a27-bbb7-d8f3a2d4e353": {
+						"caosInjectionType": "tcp",
+						"caosInjectionPort": self.getPort(),
+						"caosInjectionHost": ["0.0.0.0"] if self.isAllowingNetworkCaosConnections() else ["127.0.0.1"],
+						"hidden": hidden,
+						"rwdata": encodeCreaturesFilesystemForPublishingProtocol(rwcfs),
+						"rodata": encodeCreaturesFilesystemForPublishingProtocol(self.extractCreaturesFilesystemFromMachineConfigAsTheAuxiliaryReadonlyFilesystem())
+					},
+					
+					"2424f4d5-4888-421d-bd19-ba3d4067598d": extraInfo
+				}
+				
+				writeallText(publishingProtocolFile, json.dumps(c, sort_keys=True, indent=4), overwrite=True)
+				
+				break
+		#
+		
+		self.publishingProtocolFile = publishingProtocolFile
+		
+		
+		
 		# (important that registering cleaners for the just-created session dir comes right after making it ^^   since _actuallyStartXD() and autoFindAndSetPort() could fail/raise-exceptions! ;; )
 		# Register an atexit and garbage collection hooks to clean up the state if somepony forgets to and the python virtual machine terminates ;3
 		
 		# Create a separate cleaner object which will be registered as a garbage collection listener here also, to same effect if we learn this object becomes lost *before* python actually terminates ;3
-		self.cleaner = _lc2eSessionCleaner(self.rwActiveSessionEngineDir if autocreatedEngineDir else None, self.rwActiveSessionHomeDir if autocreatedHomeDir else None);  #PASS ALL THE THINGS NEEDED FOR CLEANING :>    (which turns out to just be the session dir XD)
+		self.cleaner = _lc2eSessionCleaner(self.rwActiveSessionEngineDir if autocreatedEngineDir else None, self.rwActiveSessionHomeDir if autocreatedHomeDir else None, publishingProtocolFile);  #PASS ALL THE THINGS NEEDED FOR CLEANING :>    (which turns out to just be the session dir XD)
 		self.cleaner.registerAsGCListener();
 		self.cleaner.registerAsAtExitHook();
 		
@@ -607,7 +700,7 @@ class TransientLC2ESession(object):
 			if (configDict == None):
 				return; #skip! ^w^
 			else:
-				writeallText(os.path.join(self.rwActiveSessionEngineDir, fileBasename), serializeCreaturesConfig(configDict));
+				writeallText(os.path.join(self.rwActiveSessionEngineDir, fileBasename), serializeCreaturesConfig(configDict), overwrite=False);
 		
 		writeConf("machine.cfg", self.machineConfig);
 		writeConf("user.cfg", self.userConfig);
@@ -989,12 +1082,14 @@ class _lc2eSessionCleaner(object):
 	# <All the things necessary for actually cleaning up! :D
 	rwActiveSessionEngineDir = None;
 	rwActiveSessionHomeDir = None;
+	publishingProtocolFile = None
 	# All the things necessary for actually cleaning up! :D >
 	
 	
-	def __init__(self, rwActiveSessionEngineDir, rwActiveSessionHomeDir):
+	def __init__(self, rwActiveSessionEngineDir, rwActiveSessionHomeDir, publishingProtocolFile):
 		self.rwActiveSessionEngineDir = rwActiveSessionEngineDir;
 		self.rwActiveSessionHomeDir = rwActiveSessionHomeDir;
+		self.publishingProtocolFile = publishingProtocolFile
 	#
 	
 	
@@ -1021,6 +1116,8 @@ class _lc2eSessionCleaner(object):
 		def rmdirIfThere(x):
 			if (os.path.isdir(x)):
 				os.rmdir(x);
+		
+		unlinkIfThere(self.publishingProtocolFile)
 		
 		if (self.rwActiveSessionHomeDir != None):
 			d = self.rwActiveSessionHomeDir
@@ -1050,8 +1147,25 @@ class _lc2eSessionCleaner(object):
 
 
 
-
-
+def encodeCreaturesFilesystemForPublishingProtocol(cfs):
+	return {
+		"Main": cfs.Main_Directory,
+		"Backgrounds": cfs.Backgrounds_Directory,
+		"Body Data": cfs.Body_Data_Directory,
+		"Bootstrap": cfs.Bootstrap_Directory,
+		"Catalogue": cfs.Catalogue_Directory,
+		"Creature Galleries": cfs.Creature_Database_Directory,
+		"My Creatures": cfs.Exported_Creatures_Directory,
+		"Genetics": cfs.Genetics_Directory,
+		"Images": cfs.Images_Directory,
+		"Journal": cfs.Journal_Directory,
+		"Overlay Data": cfs.Overlay_Data_Directory,
+		"My Agents": cfs.Resource_Files_Directory,
+		"Sounds": cfs.Sounds_Directory,
+		"Users": cfs.Users_Directory,
+		"My Worlds": cfs.Worlds_Directory
+	}
+#
 
 
 
@@ -1066,11 +1180,13 @@ class CreaturesFilesystem(object):
 	base = None;
 	
 	
-	def __init__(self, base):
-		base = os.path.abspath(base);
-		
-		self.base = base;
-		self.configureForDefaults();
+	def __init__(self, base=None):
+		if (base != None):
+			base = os.path.abspath(base);
+			
+			self.base = base;
+			self.configureForDefaults();
+		#else the fields will be populated manually!
 	#
 	
 	
@@ -1113,7 +1229,7 @@ class CreaturesFilesystem(object):
 		
 		jf = os.path.abspath(os.path.join(self.Journal_Directory, journalFile));
 		
-		writeallText(journalFile, contents);
+		writeallText(journalFile, contents, overwrite=True);
 	#
 	
 	
@@ -1687,7 +1803,7 @@ def transientLC2EDefaultCoreMain(args, body):
 	session.getMachineConfig()["Bootstrap Directory"] = session.getMachineConfig()["Auxiliary 1 Bootstrap Directory"];
 	#session.getMachineConfig()["Auxiliary 2 Images Directory"] = session.getMachineConfig()["Auxiliary 1 Images Directory"];
 	
-	session.start();
+	session.start(None, False);
 	
 	
 	session.waitForEngineToBecomeCaosable();
@@ -1736,8 +1852,8 @@ def readallText(f, sanityLimit=16777216):
 #
 
 
-def writeallText(f, content, append=False):
-	if (os.path.lexists(f)):
+def writeallText(f, content, append=False, overwrite=False):
+	if (not overwrite and os.path.lexists(f)):
 		raise OSError("Can't overwrite: file node exists: "+f);
 	else:
 		p = open(f, "w" if not append else "a");

@@ -1,0 +1,96 @@
+The directory ~/.tlc2e will be created by transientlc2e if it doesn't exist and in that directory there will be a subdirectory called "running" and it will have json files of unspecified names (only that they end in .json)
+Each json file corresponds to a single running instance of an engine managed by transientlc2e and it will be deleted when the instance shuts down (note that it's a game engine instance not world instance, so if the game exits a world back to the world switcher, that's considered just more game stuff happening in the engine, not the engine stopping or starting).
+
+The content of a json file is a dict (json object) with keys corresponding to protocol versions each of which is a JSON object of its own:
+
++ (a question mark means the entry is optional)
+
+
+• "e6b02a88-7311-4a27-bbb7-d8f3a2d4e353"  (case sensitive, remember!)
+	The core important things!
+	
+	• "caosInjectionType" : {"tcp", "windows-shm", "absent", "prevented"}
+		The CAOS injection mechanism:
+		• tcp = the TCP (usually loopback) mechanism used by LC2E on Linux (and Exodus too??)
+		• windows-shm = the SHared Memory interface used by the original Windows engine
+		• absent = for some reason the engine doesn't support CAOS Injection!
+		• prevented = the engine supports it, but it's been disabled (eg, by a TransientLC2E provider's configuration or something)
+	
+	•? "caosInjectionPort" : Integer
+		The TCP loopback port of the engine :>
+		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
+	
+	•? "caosInjectionHost" : List<String>
+		The TCP bind hosts of the engine :>
+		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
+		It's a non-empty list of IP addresses for the TCP connection to listen on, where, as usual, "0.0.0.0" means IPv4 wildcard (any address) and "::" or "0000:0000:0000:0000:0000:0000:0000:0000" or equivalent means IPv6 wildcard (any address), and "127.0.0.1" means IPv4 loopback and "::1" or "0000:0000:0000:0000:0000:0000:0000:0001" or equivalent means IPv6 loopback.
+		It's usually either loopback corresponding to "Port Security" 1 or wildcard corresponding to "Port Security" 0
+	
+	• "hidden" : Boolean
+		If not hidden, show this to users as an engine to interact with (eg, for AlbianWarp or other tools or a TransientLC2E gui or etc.)
+		Hidden is for instances that are used for, say, debugging or testing like TryAgent and are managed by a program using TransientLC2E as a library and don't want the user[s] to interact with them! :>
+	
+	• "rwdata" : Map<String, String>
+		The folders for readwrite data :>
+		It's a dict with keys corresponding to the Creatures asset folder names
+		Values correspond to absolute paths on the local system as seen by transientlc2e :3
+		Exhaustively there is:
+		• "Main"
+		• "Backgrounds"
+		• "Body Data"
+		• "Bootstrap"
+		• "Catalogue"
+		• "Creature Galleries"
+		• "Genetics"
+		• "Images"
+		• "Journal"
+		• "My Agents"
+		• "My Creatures"
+		• "My Worlds"
+		• "Overlay Data"
+		• "Sounds"
+		• "Users"
+	
+	• "rodata" : Map<String, String> or null
+		The folders for readonly data :>
+		Just like rwdata except *don't alter them!!* X'D
+		If separate modpacks are used, this is JSON null and "rodatas" is given instead :3
+	
+	•? "rodatas" : List<Map<String, String>> or null
+		A list of things analogous to "rodata", and in overriding order (the same asset file present in both uses the latter in the list order given here :3 )
+		This is how modpacks are identified! :D
+		If both rodata and this are explicitly JSON null then it means TransientLC2E uses something very unanticipated as of writing this (perhaps an engine that runs off a .zip file!? 8> ) or just really doesn't want you messing with the read-only data XD
+
+
+
+•? "2424f4d5-4888-421d-bd19-ba3d4067598d"  (case sensitive, remember!)
+	Optional things to help the user identify which one this one is!
+	
+	•? "icon" : String
+		A standard ('+' and '/' and '=') base64-encoded PNG file for the icon of this engine instance :3
+	
+	•? "creator" : String or null
+		The creator of the instance (completely arbitrary and possibly user-editable but expected to be a single non-empty line of text if given)
+		Usually something like "TryAgent" or "Debug" or etc.
+		Present and explicitly JSON-null means it was made explicitly by a user as a normal engine instance :3
+	
+	•? "name" : String
+		The name of the instance (completely arbitrary and possibly user-editable but expected to be a single non-empty line of text if given)
+	
+	•? "description" : String
+		The description of the instance (completely arbitrary and possibly user-editable but expected to be non-empty if given)
+	
+	•? "worldnames" : List<String>
+		If present, it's just a list of the My Worlds of the engine (at least at the time of engine start if not auto-updating!)
+		+ This is very useful for the user to identify which one it is :3
+		+ If you can access the local system, you can just look up os.listdir(rwdata["My Worlds"]) XD but this is nice for if sandboxing or networking (where these JSON files are sent over a network connection and TCP loopback  or something is used :3
+		+ You probably want to remove "Startup" when displaying, fyi :3
+
+
+
+• more...
+	Future extensions :>
+	(Using keys this way even for the original properties means there's no "extra" subdict we'd offload new things into for compatibility that we'd later want to move out of "extra".  Instead it's just an arbitrary (unique) name and additions will stay there :> )
+	(And using UUIDs instead of "0", "1", "2", ... means other people could add their own additions to this protocol and we don't need a "x-extensions" subdict that we'd want to eventually move into a proper one, it just starts as an arbitrary UUID like the standard ones and stays that way!  custom additions and standard things are on the same level, distinguished only democratically by the frequency of their use :3 )
+	
+	+ For example, which user of the operating system it's running on for multi-user systems, and things detailing if it's in a sandbox or over a network connection or etc. :3

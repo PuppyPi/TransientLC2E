@@ -63,7 +63,7 @@ def monkAndTryAgentMain(args):
 	
 	# NOW IT'S TRYING-AGENTS TIMEEEE! :D
 	print("TRYING AGENT!! :D");
-	return execute("tryagent", prayFile, *tryagentExtraArgs);   #return its exit status directly as ours, since success here makes whole-thing-successful, and error here makes whole-thing-errored!  ^w^..'
+	return execute("tryagent", "--creator=MonkAndTryAgent", prayFile, *tryagentExtraArgs);   #return its exit status directly as ours, since success here makes whole-thing-successful, and error here makes whole-thing-errored!  ^w^..'
 #
 
 

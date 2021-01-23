@@ -90,6 +90,13 @@ def tryagentMain(args):
 	
 	
 	
+	# --creator= for other tools using this!
+	try:
+		creator = removeP(lambda arg: arg.startswith("--creator="), args);
+	except KeyError:
+		creator = "TryAgent"
+	
+	
 	
 	# Rest of args :3
 	if (len(args) == 1):
@@ -105,7 +112,7 @@ def tryagentMain(args):
 	
 	
 #	try:
-	return copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config=config, rwdir=rwdir, rodir=rodir, verbose=verbose, doInjectionAutomatically=doInjectionAutomatically, out=lambda msg: sys.stdout.write(msg+"\n"));
+	return copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config, creator, rwdir=rwdir, rodir=rodir, verbose=verbose, doInjectionAutomatically=doInjectionAutomatically, out=lambda msg: sys.stdout.write(msg+"\n"));
 #		
 #	except TryAgentException, exc:
 #		# Super-nicely structured exception! :D!
@@ -208,7 +215,7 @@ class DependencyFailedTryAgentException(TryAgentException):
 
 
 
-def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config, agentName=None, rwdir=Default, rodir=Default, worldTemplate=None, verbose=False, doInjectionAutomatically=True, out=lambda msg: None):
+def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config, creator, agentName=None, rwdir=Default, rodir=Default, worldTemplate=None, verbose=False, doInjectionAutomatically=True, out=lambda msg: None):
 	
 	if (rwdir == Default):
 		rwdir = os.path.join(config.rwDataInstancesSuperDirectory, Tryagent_Default_Instance_Dir)
@@ -276,7 +283,7 @@ def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, con
 		session.loadCreaturesFilesystemIntoMachineConfigAsThePrimaryReadwriteFilesystem(cfs);
 		if (rodir != None): session.loadCreaturesFilesystemIntoMachineConfigAsTheAuxiliaryReadonlyFilesystem(CreaturesFilesystem(rodir));
 		configureTransientLC2ESessionForStandardDockingStation(session);
-		session.start();
+		session.start(creator, True);
 		session.waitForEngineToBecomeCaosable();  #Will throw a TransientLC2ESessionStateException if the engine crashes or something instead of becoming caosable X'D
 		
 		
