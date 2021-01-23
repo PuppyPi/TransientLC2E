@@ -1,15 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import sys, threading, weakref, atexit, random;
 import time, errno, os, subprocess, socket;
 import json;
 
-from transientlc2e_config import *;
+Default = object();
 
+UserDir = os.path.join(os.getenv("HOME"), ".tlc2e")
 
-# done! :D    allow redirection of stdin/stdout/stderr so the engine won't always spew stuff at stdout XD''
-
-# done! :D    create a bitty system to produce reports on ANY use of this system (in debug mode or otherwise!) when the engine does something funky we didn't expect! XD
 
 
 # Known transience sandbox failures!:
@@ -17,6 +15,59 @@ from transientlc2e_config import *;
 #	+ Main Directory / "caos.syntax"
 #		But these seem not to cause much problem :>'
 #	If it does, we can make TransientLC2E take over this like it does the home directory ^w^
+
+
+
+class ConfigLoadingException(Exception):
+	pass
+
+class TransientLC2EConfiguration(object):
+	transientSessionsSuperDirectory = None
+	rwDataInstancesSuperDirectory = None
+	roDataPacksSuperDirectory = None
+	roEngineTemplateDataDirectory = None
+	errorReportPackagesDirectory = None
+
+def loadDefaultConfig():
+	"Returns a TransientLC2EConfiguration on success, or throws a ConfigLoadingException with the message for the user on failure"
+	
+	ConfFile = os.path.join(UserDir, "config.json")
+	DefaultContentDir = os.path.join(UserDir, "content")
+	
+	if (os.path.isfile(ConfFile)):
+		h = open(ConfFile, "r")
+		try:
+			Config = json.load(h)
+		finally:
+			h.close()
+	else:
+		Config = {}
+	
+	def resolveIfRelative(p):
+		if (os.path.isabs(p)):
+			return p
+		else:
+			return os.path.join(DefaultContentDir, p)
+	
+	def getpath(k):
+		v = Config.get(k)
+		return resolveIfRelative(v if v != None else k)
+	
+	config = TransientLC2EConfiguration()
+	config.transientSessionsSuperDirectory = getpath("running-transient-sessions");
+	config.rwDataInstancesSuperDirectory = getpath("rw-instances");
+	config.roDataPacksSuperDirectory = getpath("ro-datapacks");
+	config.roEngineTemplateDataDirectory = getpath("ro-engine");
+	config.errorReportPackagesDirectory = getpath("error-reports");
+	return config
+#
+
+
+
+
+
+
+
 
 
 
@@ -71,7 +122,7 @@ class TransientLC2ESession(object):
 	captureStdout = True;
 	captureStderr = True;
 	
-	errorReportPackagesDirectory = Transient_LC2E_ErrorReportPackages_Directory;
+	errorReportPackagesDirectory = None;
 	# Set beforehand}
 	
 	
@@ -101,12 +152,11 @@ class TransientLC2ESession(object):
 	
 	
 	
-	def __init__(self, roEngineTemplateDir=Transient_LC2E_ROEngineTemplateData_Directory, rwActiveSessionEngineDir=None, rwActiveSessionHomeDir=None, port=None, readInitialSkeletonConfigFileDataFromEngineTemplate=True):
+	def __init__(self, roEngineTemplateDir, rwActiveSessionEngineDir=None, rwActiveSessionHomeDir=None, port=None, readInitialSkeletonConfigFileDataFromEngineTemplate=True):
 		# {shhh, private things >,>
 		self.waitLock = threading.Lock();
 		self.cleaner = None;
 		# }
-		
 		
 		self.setLogToNonVerbose();
 		
@@ -142,6 +192,12 @@ class TransientLC2ESession(object):
 		if (readInitialSkeletonConfigFileDataFromEngineTemplate):
 			self.readInitialSkeletonConfigFileDataFromEngineTemplate();
 	#
+	
+	def loadDefaultsFromConfig(self, config):
+		self.defaultAutoCreateSessionSuperSuperDirectory = config.transientSessionsSuperDirectory
+		self.errorReportPackagesDirectory = config.errorReportPackagesDirectory
+	#
+	
 	
 	def setLogToVerbose(self, out=sys.stdout):
 		def verboseLog(msg):
@@ -460,8 +516,11 @@ class TransientLC2ESession(object):
 			return True;
 	#
 	
-	def autoFindAndCreateSessionEngineDir(self, superDir=Transient_LC2E_TransientSessions_SuperDirectory):
+	def autoFindAndCreateSessionEngineDir(self, superDir=Default):
 		"Note: this is automatically called by start() if self.isRWActiveSessionEngineDirSetToAutonameRightBeforeStart() is true, *right* before execution, for convenience, and so it will be cleaned up as part of the normal cleanup cycle if something goes wrong ^_^"
+		
+		if (superDir == Default):
+			superDir = self.defaultAutoCreateSessionSuperSuperDirectory
 		
 		self.setRWActiveSessionEngineDir(getUnusedFileSimilarlyNamedTo(superDir, "autonamed-transient-lc2e-session"));
 		
@@ -1551,6 +1610,8 @@ def toCAOSByteArray(b):
 
 
 
+
+
 def transientLC2EDefaultMain(args):
 	"This functions as a useable function for simple applications, and also an example for others! :D"
 	
@@ -1566,14 +1627,20 @@ def transientLC2EDefaultMain(args):
 def transientLC2EDefaultCoreMain(args, body):
 	"This functions as a useable function for simple applications, and also an example for others! :D"
 	
-	Default = object();
-	
 	def printHelp():
 		print("Usage: "+os.path.basename(sys.argv[0])+" [(rwdata-instance-dir) [(rodata-pack-dir)]]");
 	
-	if (args[0] == "-h" or args[0] == "--help"):
+	# Printing help! :D
+	if (len(args) == 0 or "-h" in args or "--help" in args):
 		printHelp()
 		return 0
+	
+	try:
+		config = loadDefaultConfig()
+	except ConfigLoadingException, e:
+		print("Error loading config!: "+e.message)
+		return 8
+	
 	
 	
 	if (len(args) == 0):
@@ -1597,17 +1664,19 @@ def transientLC2EDefaultCoreMain(args, body):
 		rodataPackDir = "default";
 	
 	
-	rwdataInstanceDir = os.path.join(Transient_LC2E_RWDataInstances_SuperDirectory, rwdataInstanceDir) if not "/" in rwdataInstanceDir else os.path.abspath(rwdataInstanceDir);
-	if (rodataPackDir != None): rodataPackDir = os.path.join(Transient_LC2E_RODataPacks_SuperDirectory, rodataPackDir) if not "/" in rodataPackDir else os.path.abspath(rodataPackDir);
+	rwdataInstanceDir = os.path.join(config.rwDataInstancesSuperDirectory, rwdataInstanceDir) if not "/" in rwdataInstanceDir else os.path.abspath(rwdataInstanceDir);
+	if (rodataPackDir != None): rodataPackDir = os.path.join(config.roDataPacksSuperDirectory, rodataPackDir) if not "/" in rodataPackDir else os.path.abspath(rodataPackDir);
 	
 	
 	
 	
 	
-	session = TransientLC2ESession();
+	session = TransientLC2ESession(config.roEngineTemplateDataDirectory);
 	
 	# Be very wordy :3
 	session.setLogToVerbose();
+	
+	session.loadDefaultsFromConfig(config)
 	
 	session.loadCreaturesFilesystemIntoMachineConfigAsThePrimaryReadwriteFilesystem(CreaturesFilesystem(rwdataInstanceDir));
 	if (rodataPackDir != None): session.loadCreaturesFilesystemIntoMachineConfigAsTheAuxiliaryReadonlyFilesystem(CreaturesFilesystem(rodataPackDir));

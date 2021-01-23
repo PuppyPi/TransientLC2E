@@ -1,6 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import sys, os;
+
+TopPythonDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TopDir = os.path.dirname(TopPythonDir)
+
+sys.path.append(os.path.join(TopPythonDir, "main"))
+print(sys.path)
+
 from transientlc2e import *;
 
 args = sys.argv[1:];
@@ -21,7 +28,7 @@ if (len(args) == 0):
 	#source = sys.stdin.read();
 	#runtest(source);
 	
-	defaultTestDataDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test config datas");
+	defaultTestDataDir = os.path.join(TopDir, "test-data");
 	
 	if (os.path.isdir(defaultTestDataDir)):
 		args = map(lambda n: os.path.join(defaultTestDataDir, n), os.listdir(defaultTestDataDir));

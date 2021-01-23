@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # Note that this requires a file named xyz.agent[s] to contain an agent named exactly, case-sensitively, "xyz" (we don't look inside the actual PRAY file, sorries :P )
 # (or multiple, but that's the one we will test for!)
@@ -17,22 +17,15 @@ TryagentCaosDebug = True;
 
 
 def tryagentMain(args):
-	Default = object();  #this is what you call a singleton ^w^
-	
-	
-	def doPrintHelp():
+	def printHelp():
 		print("usage: "+os.path.basename(sys.argv[0])+" [-v] [-m] [--rwdir=<dir>] [--rodir=[<dir>]] <agentfile>");
 		print("");
 		print(":>");
 	
-	
-	
-	# -h for help! :D
-	if ("-h" in args):
-		printHelp = True;
-		args.remove("-h");
-	else:
-		printHelp = False;
+	# Printing help! :D
+	if (len(args) == 0 or "-h" in args or "--help" in args):
+		printHelp()
+		return 0
 	
 	
 	# -v for verbose! :D
@@ -43,13 +36,23 @@ def tryagentMain(args):
 		verbose = False;
 	
 	
+	
+	try:
+		config = loadDefaultConfig()
+	except ConfigLoadingException, e:
+		print("Error loading config!: "+e.message)
+		return 8
+	
+	
+	
+	
+	
 	# -m for manual injection! :D
 	if ("-m" in args):
 		doInjectionAutomatically = False;
 		args.remove("-m");
 	else:
 		doInjectionAutomatically = True;   # 'manual' not 'not-automatic' so the default's automatic ;>
-	
 	
 	
 	# --rwdir= for reading AND writing, aka instance directory, aka primary dirs :>
@@ -64,7 +67,7 @@ def tryagentMain(args):
 		if (Tryagent_Default_Instance_Dir == None): raise Exception();  #can't be none! it's the primary directories! D:
 		rwdir = Tryagent_Default_Instance_Dir;
 	if (not "/" in rwdir):
-		rwdir = os.path.join(Transient_LC2E_RWDataInstances_SuperDirectory, rwdir);
+		rwdir = os.path.join(config.rwDataInstancesSuperDirectory, rwdir);
 	
 	
 	
@@ -101,19 +104,15 @@ def tryagentMain(args):
 	
 	
 	
-	if (printHelp):
-		doPrintHelp();
-		return;
-	else:
-		
-#		try:
-		return copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, rwdir=rwdir, rodir=rodir, verbose=verbose, doInjectionAutomatically=doInjectionAutomatically, out=lambda msg: sys.stdout.write(msg+"\n"));
-#			
-#		except TryAgentException, exc:
-#			# Super-nicely structured exception! :D!
-#			
-#			if (isinstance(exc, CaosErrorTryAgentException)):
-#				
+#	try:
+	return copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config=config, rwdir=rwdir, rodir=rodir, verbose=verbose, doInjectionAutomatically=doInjectionAutomatically, out=lambda msg: sys.stdout.write(msg+"\n"));
+#		
+#	except TryAgentException, exc:
+#		# Super-nicely structured exception! :D!
+#		
+#		if (isinstance(exc, CaosErrorTryAgentException)):
+#			todo..
+
 #
 
 
@@ -209,7 +208,14 @@ class DependencyFailedTryAgentException(TryAgentException):
 
 
 
-def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, agentName=None, rwdir=os.path.join(Transient_LC2E_RWDataInstances_SuperDirectory, Tryagent_Default_Instance_Dir), rodir=(os.path.join(Transient_LC2E_RODataPacks_SuperDirectory, Tryagent_Default_Datapack_Dir) if Tryagent_Default_Datapack_Dir != None else None), worldTemplate=None, verbose=False, doInjectionAutomatically=True, out=lambda msg: None):
+def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, config, agentName=None, rwdir=Default, rodir=Default, worldTemplate=None, verbose=False, doInjectionAutomatically=True, out=lambda msg: None):
+	
+	if (rwdir == Default):
+		rwdir = os.path.join(config.rwDataInstancesSuperDirectory, Tryagent_Default_Instance_Dir)
+	
+	if (rodir == Default):
+		rodir = os.path.join(config.roDataPacks_SuperDirectory, Tryagent_Default_Datapack_Dir) if Tryagent_Default_Datapack_Dir != None else None
+	
 	agentFile = os.path.abspath(agentFile);
 	rwdir = os.path.abspath(rwdir);
 	rodir = os.path.abspath(rodir) if rodir != None else None;
@@ -264,8 +270,9 @@ def copyWorldStartLC2ELoadWorldInjectAgentWaitForUserAndTerminate(agentFile, age
 		
 		
 		# Let's do this! \o/ :D
-		session = TransientLC2ESession();
+		session = TransientLC2ESession(config.roEngineTemplateDataDirectory);
 		session.verbose = verbose;
+		session.loadDefaultsFromConfig(config)
 		session.loadCreaturesFilesystemIntoMachineConfigAsThePrimaryReadwriteFilesystem(cfs);
 		if (rodir != None): session.loadCreaturesFilesystemIntoMachineConfigAsTheAuxiliaryReadonlyFilesystem(CreaturesFilesystem(rodir));
 		configureTransientLC2ESessionForStandardDockingStation(session);

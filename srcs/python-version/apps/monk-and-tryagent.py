@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # Note that like tryagent this requires the agent name match up to the filename
 # but ALSO the .cos file name match up to both the agent name and the filename!

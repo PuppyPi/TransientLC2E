@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 from transientlc2e import *;
 
@@ -7,23 +7,17 @@ Runcaos_Default_Datapack_Dir = None;
 
 
 def runcaosMain(args):
-	Default = object();  #this is what you call a singleton ^w^
-	
-	
-	def doPrintHelp():
+	def printHelp():
 		print("usage: "+os.path.basename(sys.argv[0])+" [-v] [--rwdir=<dir>] [--rodir=[<dir>]]  <caoscodes...>");
 		print("or:    "+os.path.basename(sys.argv[0])+" [-v] [--rwdir=<dir>] [--rodir=[<dir>]]   <  <input>");
 		print("");
 		print(":>");
 	
 	
-	
-	# -h for help! :D
-	if ("-h" in args):
-		printHelp = True;
-		args.remove("-h");
-	else:
-		printHelp = False;
+	# Printing help! :D
+	if (len(args) == 0 or "-h" in args or "--help" in args):
+		printHelp()
+		return 0
 	
 	
 	# -v for verbose! :D
@@ -32,6 +26,14 @@ def runcaosMain(args):
 		args.remove("-v");
 	else:
 		verbose = False;
+	
+	
+	
+	try:
+		config = loadDefaultConfig()
+	except ConfigLoadingException, e:
+		print("Error loading config!: "+e.message)
+		return 8
 	
 	
 	
@@ -47,7 +49,7 @@ def runcaosMain(args):
 		if (Runcaos_Default_Instance_Dir == None): raise Exception();  #can't be none! it's the primary directories! D:
 		rwdir = Runcaos_Default_Instance_Dir;
 	if (not "/" in rwdir):
-		rwdir = os.path.join(Transient_LC2E_RWDataInstances_SuperDirectory, rwdir);
+		rwdir = os.path.join(config.rwDataInstancesSuperDirectory, rwdir);
 	
 	
 	
@@ -82,23 +84,19 @@ def runcaosMain(args):
 	
 	
 	
-	if (printHelp):
-		doPrintHelp();
-		return;
-	else:
-		
-		startLC2ERunCaosAndTerminate(caoscodes, rwdir, rodir, verbose=verbose, out=lambda msg: sys.stdout.write(msg+"\n"));
-		
+	startLC2ERunCaosAndTerminate(caoscodes, config, rwdir, rodir, verbose=verbose, out=lambda msg: sys.stdout.write(msg+"\n"));
 #
 
 
 
 
 
-def startLC2ERunCaosAndTerminate(caoscodes, rwdir, rodir=None, verbose=False, out=lambda msg: None):
-	session = TransientLC2ESession();
+def startLC2ERunCaosAndTerminate(caoscodes, config, rwdir, rodir=None, verbose=False, out=lambda msg: None):
+	session = TransientLC2ESession(config.roEngineTemplateDataDirectory);
 	
 	session.verbose = verbose;
+	
+	session.loadDefaultsFromConfig(config)
 	
 	session.loadCreaturesFilesystemIntoMachineConfigAsThePrimaryReadwriteFilesystem(CreaturesFilesystem(rwdir));
 	if (rodir != None): session.loadCreaturesFilesystemIntoMachineConfigAsTheAuxiliaryReadonlyFilesystem(CreaturesFilesystem(rodir));
