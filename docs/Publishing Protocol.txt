@@ -20,7 +20,7 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 		The TCP loopback port of the engine :>
 		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
 	
-	•? "caosInjectionHost" : List<String>
+	•? "caosInjectionHosts" : List<String>
 		The TCP bind hosts of the engine :>
 		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
 		It's a non-empty list of IP addresses for the TCP connection to listen on, where, as usual, "0.0.0.0" means IPv4 wildcard (any address) and "::" or "0000:0000:0000:0000:0000:0000:0000:0000" or equivalent means IPv6 wildcard (any address), and "127.0.0.1" means IPv4 loopback and "::1" or "0000:0000:0000:0000:0000:0000:0000:0001" or equivalent means IPv6 loopback.

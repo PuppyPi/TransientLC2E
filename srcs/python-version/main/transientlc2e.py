@@ -529,7 +529,7 @@ class TransientLC2ESession(object):
 					"e6b02a88-7311-4a27-bbb7-d8f3a2d4e353": {
 						"caosInjectionType": "tcp",
 						"caosInjectionPort": self.getPort(),
-						"caosInjectionHost": ["0.0.0.0"] if self.isAllowingNetworkCaosConnections() else ["127.0.0.1"],
+						"caosInjectionHosts": ["0.0.0.0"] if self.isAllowingNetworkCaosConnections() else ["127.0.0.1"],
 						"hidden": hidden,
 						"rwdata": encodeCreaturesFilesystemForPublishingProtocol(rwcfs),
 						"rodata": encodeCreaturesFilesystemForPublishingProtocol(self.extractCreaturesFilesystemFromMachineConfigAsTheAuxiliaryReadonlyFilesystem())
