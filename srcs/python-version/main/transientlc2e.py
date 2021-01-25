@@ -498,7 +498,7 @@ class TransientLC2ESession(object):
 		
 		
 		while True:
-			publishingProtocolFile = os.path.join(d, str(Random().randint(0, 2147483647)))
+			publishingProtocolFile = os.path.join(d, str(Random().randint(0, 2147483647))+".json")
 			
 			if (not os.path.lexists(publishingProtocolFile)):
 				writeallText(publishingProtocolFile, "", overwrite=False)  #quickly as we race to the race condition as unix requires x'D
