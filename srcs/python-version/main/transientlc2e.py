@@ -532,7 +532,7 @@ class TransientLC2ESession(object):
 						"caosInjectionHosts": ["0.0.0.0"] if self.isAllowingNetworkCaosConnections() else ["127.0.0.1"],
 						"hidden": hidden,
 						"rwdata": encodeCreaturesFilesystemForPublishingProtocol(rwcfs),
-						"rodata": encodeCreaturesFilesystemForPublishingProtocol(self.extractCreaturesFilesystemFromMachineConfigAsTheAuxiliaryReadonlyFilesystem())
+						"rodatas": [encodeCreaturesFilesystemForPublishingProtocol(self.extractCreaturesFilesystemFromMachineConfigAsTheAuxiliaryReadonlyFilesystem())]
 					},
 					
 					"2424f4d5-4888-421d-bd19-ba3d4067598d": extraInfo

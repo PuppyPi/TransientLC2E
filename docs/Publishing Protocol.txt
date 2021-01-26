@@ -51,13 +51,10 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 		• "Sounds"
 		• "Users"
 	
-	• "rodata" : Map<String, String> or null
+	• "rodatas" : List<Map<String, String>> or null
 		The folders for readonly data :>
-		Just like rwdata except *don't alter them!!* X'D
-		If separate modpacks are used, this is JSON null and "rodatas" is given instead :3
-	
-	•? "rodatas" : List<Map<String, String>> or null
-		A list of things analogous to "rodata", and in priority order mirroring the Auxiliary numbers in machine.cfg
+		Each one is just like rwdata except *don't alter them!!* X'D
+		A list of data packs including the base game, and in priority order mirroring the Auxiliary numbers in machine.cfg
 		 (ie, the same asset file present in both uses the *earlier* in the list order given here :3 )
 		This is how modpacks are independently identified! :D
 		If both rodata and this are explicitly JSON null then it means TransientLC2E uses something very unanticipated as of writing this (perhaps an engine that runs off a .zip file!? 8> ) or it just really doesn't want you messing with the read-only data XD
