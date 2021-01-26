@@ -24,8 +24,12 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 	•? "caosInjectionHosts" : List<String>
 		The TCP bind hosts of the engine :>
 		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
-		It's a non-empty list of IP addresses for the TCP connection to listen on, where, as usual, "0.0.0.0" means IPv4 wildcard (any address) and "::" or "0000:0000:0000:0000:0000:0000:0000:0000" or equivalent means IPv6 wildcard (any address), and "127.0.0.1" means IPv4 loopback and "::1" or "0000:0000:0000:0000:0000:0000:0000:0001" or equivalent means IPv6 loopback.
+		It's a non-empty list of hosts (domain names incl. "localhost" or IP addresses) for the TCP connection to listen on, where, as usual, "0.0.0.0" means IPv4 wildcard (any address) and "::" or "0000:0000:0000:0000:0000:0000:0000:0000" or equivalent means IPv6 wildcard (any address), and "127.0.0.1" means IPv4 loopback and "::1" or "0000:0000:0000:0000:0000:0000:0000:0001" or equivalent means IPv6 loopback.
 		It's usually either loopback corresponding to "Port Security" 1 or wildcard corresponding to "Port Security" 0
+	
+	•? "caosInjectionGameName" : String
+		The Game Name for the purposes of CAOS injection (namely on the Windows Shared Memory interface)
+		If caosInjectionType is "windows-shm" this is mandatory.  If it's "tcp", "absent", or "prevented", then this must not be present.
 	
 	• "hidden" : Boolean
 		If not hidden, show this to users as an engine to interact with (eg, for AlbianWarp or other tools or a TransientLC2E gui or etc.)
