@@ -18,7 +18,7 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 		• prevented = the engine supports it, but it's been disabled (eg, by a TransientLC2E provider's configuration or something)
 	
 	•? "caosInjectionPort" : Integer
-		The TCP loopback port of the engine :>
+		The TCP port of the engine :>
 		If caosInjectionType is "tcp" this is mandatory.  If it's "windows-shm", "absent", or "prevented", then this must not be present.
 	
 	•? "caosInjectionHosts" : List<String>
@@ -87,7 +87,7 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 	•? "worldnames" : List<String>
 		If present, it's just a list of the My Worlds of the engine (at least at the time of engine start if not auto-updating!)
 		+ This is very useful for the user to identify which one it is :3
-		+ If you can access the local system, you can just look up os.listdir(rwdata["My Worlds"]) XD but this is nice for if sandboxing or networking (where these JSON files are sent over a network connection and TCP loopback  or something is used :3
+		+ If you can access the local system, you can just look up os.listdir(rwdata["My Worlds"]) XD but this is nice for if sandboxing or networking (where these JSON files are sent over a network connection and TCP non-loopback or something is used :3 )
 		+ You probably want to remove "Startup" when displaying, fyi :3
 
 
