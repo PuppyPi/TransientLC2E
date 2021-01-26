@@ -1,4 +1,4 @@
-The directory ~/.tlc2e will be created by transientlc2e if it doesn't exist and in that directory there will be a subdirectory called "running" and it will have json files of unspecified names (only that they end in .json)
+The directory ~/.tlc2e will be created by transientlc2e if it doesn't exist and in that directory there will be a subdirectory called "running" and it will have UTF-8 json files of unspecified names (only that they end in .json)
 Each json file corresponds to a single running instance of an engine managed by transientlc2e and it will be deleted when the instance shuts down (note that it's a game engine instance not world instance, so if the game exits a world back to the world switcher, that's considered just more game stuff happening in the engine, not the engine stopping or starting).
 
 The content of a json file is a dict (json object) with keys corresponding to protocol versions each of which is a JSON object of its own:
