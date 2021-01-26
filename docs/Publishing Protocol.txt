@@ -4,6 +4,7 @@ Each json file corresponds to a single running instance of an engine managed by 
 The content of a json file is a dict (json object) with keys corresponding to protocol versions each of which is a JSON object of its own:
 
 + (a question mark means the entry is optional)
++ (things are never JSON null unless explicitly stated otherwise!)
 
 
 • "e6b02a88-7311-4a27-bbb7-d8f3a2d4e353"  (case sensitive, remember!)
@@ -32,6 +33,7 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 	
 	• "rwdata" : Map<String, String>
 		The folders for readwrite data :>
+		 (Note that this can contain traditionally "readonly" data as well..but it won't be treated as such of course X3 )
 		It's a dict with keys corresponding to the Creatures asset folder names
 		Values correspond to absolute paths on the local system as seen by transientlc2e :3
 		Exhaustively there is:
@@ -51,7 +53,7 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 		• "Sounds"
 		• "Users"
 	
-	• "rodatas" : List<Map<String, String>> or null
+	• "rodatas" : List<Map<String, String>> not null but possibly empty if all data is stored in rwdata
 		The folders for readonly data :>
 		Each one is just like rwdata except *don't alter them!!* X'D
 		A list of data packs including the base game, and in priority order mirroring the Auxiliary numbers in machine.cfg
