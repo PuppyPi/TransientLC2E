@@ -57,9 +57,10 @@ The content of a json file is a dict (json object) with keys corresponding to pr
 		If separate modpacks are used, this is JSON null and "rodatas" is given instead :3
 	
 	•? "rodatas" : List<Map<String, String>> or null
-		A list of things analogous to "rodata", and in overriding order (the same asset file present in both uses the latter in the list order given here :3 )
-		This is how modpacks are identified! :D
-		If both rodata and this are explicitly JSON null then it means TransientLC2E uses something very unanticipated as of writing this (perhaps an engine that runs off a .zip file!? 8> ) or just really doesn't want you messing with the read-only data XD
+		A list of things analogous to "rodata", and in priority order mirroring the Auxiliary numbers in machine.cfg
+		 (ie, the same asset file present in both uses the *earlier* in the list order given here :3 )
+		This is how modpacks are independently identified! :D
+		If both rodata and this are explicitly JSON null then it means TransientLC2E uses something very unanticipated as of writing this (perhaps an engine that runs off a .zip file!? 8> ) or it just really doesn't want you messing with the read-only data XD
 
 
 
