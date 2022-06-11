@@ -1,0 +1,7 @@
+!• *Can we use many Auxiliaries in machine.cfg after all!?!*  :'D
+
+• Updateable data packs (with reinjection of scripts and/or update scripts added!!  :D )
+• Removeable data packs? :D
+• Create your own data packs from a bunch of PRAY (eg .agent[s]) files 8>
+	• And/or from Journal files, like Ports&Prints and if Aiko ever makes Garden Box setups exportable it'll probably be as Journal files :D
+		But since Journal files are readwrite, how does that work with datapacks/Auxiliaries??
