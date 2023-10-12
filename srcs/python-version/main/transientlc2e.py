@@ -629,8 +629,7 @@ class TransientLC2ESession(object):
 		d = os.path.join(parentDir, "fakehome");
 		
 		os.mkdir(d, 0755);
-		os.mkdir(os.path.join(d, ".config"), 0755);
-		os.symlink(os.path.join(os.getenv("HOME"), ".config", "pulse"), os.path.join(d, ".config", "pulse"));
+		os.symlink(os.path.join(os.getenv("HOME"), ".config"), os.path.join(d, ".config"));
 		
 		self.setRWActiveSessionHomeDir(d);
 	#
@@ -1122,8 +1121,7 @@ class _lc2eSessionCleaner(object):
 		if (self.rwActiveSessionHomeDir != None):
 			d = self.rwActiveSessionHomeDir
 			
-			unlinkIfThere(os.path.join(d, ".config", "pulse"))
-			rmdirIfThere(os.path.join(d, ".config"))
+			unlinkIfThere(os.path.join(d, ".config"))
 			
 			unlinkIfThere(os.path.join(d, ".creaturesengine", "port"));
 			rmdirIfThere(os.path.join(d, ".creaturesengine"));
@@ -1132,8 +1130,7 @@ class _lc2eSessionCleaner(object):
 		if (self.rwActiveSessionEngineDir != None):
 			d = self.rwActiveSessionEngineDir
 			
-			unlinkIfThere(os.path.join(d, ".config", "pulse"))
-			rmdirIfThere(os.path.join(d, ".config"))
+			unlinkIfThere(os.path.join(d, ".config"))
 			
 			# Just simply unlink/delete all the symlinks and plain files (creatures_engine_logfile.txt and rewritten config files)  ^_^
 			for n in os.listdir(d):
