@@ -4,6 +4,12 @@ import sys, threading, weakref, atexit, random;
 import time, errno, os, subprocess, socket;
 import json;
 
+IsJython = sys.platform.startswith("java");
+if (IsJython):
+	import jarray
+	from java.net import Socket
+	from java.io import IOException, ByteArrayOutputStream
+
 from random import Random
 
 Default = object();
@@ -980,6 +986,12 @@ class TransientLC2ESession(object):
 		if (self.state != TransientLC2ESession.State_Running):
 			raise self._errWrongState();
 		
+		if (IsJython):
+			return self._runcaos_jython(caoscode);
+		else:
+			return self._runcaos_cpython(caoscode);
+	
+	def _runcaos_cpython(self, caoscode):
 		try:
 			s = socket.socket();
 			s.connect(("localhost", self.getPort()));
@@ -995,6 +1007,37 @@ class TransientLC2ESession(object):
 			return response;
 		except socket.error, e:
 			if (e.errno == errno.ECONNREFUSED):
+				raise TransientLC2ESessionCAOSConnectionRefused();
+			else:
+				raise;
+	#
+	
+	def _runcaos_jython(self, caoscode):
+		try:
+			s = Socket("localhost", self.getPort());
+			
+			try:
+				o = s.getOutputStream()
+				o.write(caoscode+"\r\nrscr\r\n");  #we could use the fileything from s.makefile() but prolly fasters to use this nice thing here :3    (we are lazy to use the makefile down below >,> )
+				o.flush();
+				
+				i = s.getInputStream()
+				responseBuffer = ByteArrayOutputStream();
+				buff = jarray.zeros(4096, "b");
+				while (True):
+					amt = i.read(buff, 0, len(buff));
+					if (amt == -1):
+						break;
+					responseBuffer.write(buff, 0, amt);
+				
+				response = str(bytearray(responseBuffer.toByteArray()))
+			
+			finally: #ie, make SURE this is called, even if it throws an exception! ;D
+				s.close();
+			
+			return response;
+		except IOException, e:
+			if ("Connection refused" in e.getMessage()):
 				raise TransientLC2ESessionCAOSConnectionRefused();
 			else:
 				raise;
