@@ -16,6 +16,7 @@ Default = object();
 
 UserDir = os.path.join(os.getenv("HOME"), ".tlc2e")
 
+EnvironmentVariablesToPassThrough = lambda n: n.startswith("LC_") or n in ["LANG", "LANGUAGE", "TZ"]
 
 
 # Known transience sandbox failures!:
@@ -720,6 +721,12 @@ class TransientLC2ESession(object):
 		exe = os.path.abspath(os.path.join(self.rwActiveSessionEngineDir, "lc2e"));   #EXEcutable in the general sense, not Microsoft Windows format XD'   (kind of like Dynamically Linked Library, or High-Definition DVD, etc.c.   .... #when companies grab generic names for their products >_>  XD' )
 		
 		env = {"LD_LIBRARY_PATH": LD_LIBRARY_PATH, "DISPLAY": x11Display, "HOME": self.rwActiveSessionHomeDir};
+		
+		# Pass through some environment variables!
+		for n in filter(EnvironmentVariablesToPassThrough, os.environ.keys()):
+			v = os.getenv(n)
+			if (v != None):
+				env[n] = v
 		
 		cwd = self.rwActiveSessionEngineDir;
 		
